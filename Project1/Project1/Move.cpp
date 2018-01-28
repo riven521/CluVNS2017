@@ -5,8 +5,10 @@ Move::Move(){}
 
 Move::~Move(){}
 
+//车辆内聚类间的交互;位置a(某车辆对应的某聚类位置)与b的互换
 void Move::swap(ClusterSolution*& sol, Pos& a, Pos& b)
 {
+	//a.veh_:veh_对应vTrips;a.ind_:ind_对应vClusters;
 	std::swap(sol->vTrips_.at(a.veh_)->vClusters_.at(a.ind_), sol->vTrips_.at(b.veh_)->vClusters_.at(b.ind_));
 }
 
@@ -92,7 +94,7 @@ void Move::orOpt(ClusterSolution*& sol, Pos& a, Pos& b, int& N)
 }
 
 ///////////////////////////////////////////////////////////////////////
-
+//节点间的交互
 void Move::swap(NodeSolution*& sol, Pos& a, Pos& b)
 {
 	std::swap(sol->vTrips_.at(a.veh_)->vNodes_.at(a.ind_), sol->vTrips_.at(a.veh_)->vNodes_.at(b.ind_));

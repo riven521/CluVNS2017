@@ -14,7 +14,7 @@ VNS::~VNS(){}
 /////////////////////////////////////////////////////////
 
 /* INTRA VEHICLE NEIGHBOURHOODS */
-
+//对应Table1的算子1-4
 bool CluVNS::intraVehicleSwap(void)
 {
 	bool flag = false; 
@@ -27,6 +27,7 @@ bool CluVNS::intraVehicleSwap(void)
 		{
 			for (int j = i + 1; j < cluTrip->getSize() - 1; j++)
 			{
+				//diff判断是否满足条件
 				double diff;
 
 				if (j == i + 1)
@@ -50,6 +51,7 @@ bool CluVNS::intraVehicleSwap(void)
 						+ cluVRPinst_->getDistClusters(cluTrip->getCluster(i), cluTrip->getCluster(j + 1));
 				}
 
+				//如果diff满足,直接Move交换即可,无需修改demand;因为在同一个trip中;
 				if (diff < -.01)
 				{
 					Pos a(v, i), b(v, j);
@@ -222,7 +224,7 @@ bool CluVNS::intraVehicleOrOpt(void)
 }
 
 /* INTER VEHICLE NEIGHBOURHOODS */
-
+//对应Table1的算子5-7
 bool CluVNS::interVehicleSwap(void)
 {
 	bool flag = false;
@@ -459,6 +461,7 @@ CluVNS::~CluVNS(){}
 void CluVNS::run(ClusterSolution*& s)
 {
 	//shuffle the order in which the neighbourhoods are checked
+	//7个算子打乱顺序
 	std::random_shuffle(nbhSequence_.begin(), nbhSequence_.end());
 
 	current_ = s;
@@ -507,7 +510,7 @@ bool NodVNS::intraVehicleSwap(void)
 						for (int j = first + 1; j <= last; j++)
 						{
 							double d;
-
+							//通过d判断是否需要调整
 							if (j == i + 1)
 							{
 								d = \
@@ -528,6 +531,7 @@ bool NodVNS::intraVehicleSwap(void)
 									+ cluVRPinst_->getDistNodes(nodTrip->getNode(j - 1), nodTrip->getNode(i))\
 									+ cluVRPinst_->getDistNodes(nodTrip->getNode(i), nodTrip->getNode(j + 1));
 							}
+							//如果需要调整,执行Move操作;修改Dist,但不改demand,因为在同一个clusters
 							if (d < -.01)
 							{
 								Pos a(v, i), b(v, j);
@@ -1267,6 +1271,7 @@ NodVNS::NodVNS(CluVRPinst* cluVRPInst, bool innerLoop) :VNS(cluVRPInst)
 
 NodVNS::~NodVNS(){}
 
+//用到?
 void NodVNS::enableAdditionalNBHs(void)
 {
 	additionalNBHs_ = true;

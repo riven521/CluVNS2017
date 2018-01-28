@@ -1,3 +1,4 @@
+//重要:输入数据CluVRPinst的形式(如修改算例需调整该文件)
 #pragma once
 #include <vector>
 

@@ -1,3 +1,4 @@
+//勿动;基础信息(cluster信息)
 #pragma once
 #include <vector>
 #include <algorithm>

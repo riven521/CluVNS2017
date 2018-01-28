@@ -70,7 +70,7 @@ bool BinPacking::run(ClusterSolution*& s)
 			s->getTrip(veh)->addStop(c);
 			vClientClusters.erase(vClientClusters.begin());
 		}
-		else	//如果未找到,调用Sec3.3的redistribution algorithm(SwapCluster),破解无车可用情形
+		else	//如果未找到,调用Sec3.3的redistribution algorithm(SwapCluster),尝试破解无车可用情形(如果不成功,重新放该聚类c;如不成功超过5次,执行diversOperator_;如不成功超过100次,放弃)
 		{			
 			redistributionOperator_->run(s);
 			nRedistributionIterations++;
@@ -98,7 +98,7 @@ bool BinPacking::run(ClusterSolution*& s)
 }
 
 /******************************* DIVERSIFICATION **************************************/
-
+//将toAdd中移除的类再增加到类解s中
 void Diversification::repairCluster(ClusterSolution*& s, std::vector<Cluster*> toAdd)
 {
 	//add clusters in random order
@@ -111,15 +111,17 @@ void Diversification::repairCluster(ClusterSolution*& s, std::vector<Cluster*> t
 
 		//look for all feasible vehicles (capacity)
 		do {
-
+			//找出能放入toAdd最后一个node的所有车;即车剩余容量>toAdd中back的容量
 			for (int v = 0; v < s->getnTrips(); v++)
 			{
 				if (toAdd.back()->getDemand() <= s->getTrip(v)->getSpareCapacity())
 				{
+					//std::cout << toAdd.back()->getDemand() << " ";
+					//std::cout << s->getTrip(v)->getSpareCapacity() << " ";
 					feasVeh.push_back(v);
 				}
 			}
-
+			//如没有车:1再次perturbationCluster获取更多的toAdd;2:增加额外的trip/veh
 			if (feasVeh.size() == 0)	//no feasible vehicles found
 			{
 				redistribution_->run(s);
@@ -148,6 +150,7 @@ void Diversification::repairCluster(ClusterSolution*& s, std::vector<Cluster*> t
 		} while (true);
 
 		//choose one feasible vehicle at random
+		//从能放入该node的车里随机选取一辆放入
 		int selection = rand() % feasVeh.size();
 		s->getTrip(feasVeh.at(selection))->addStop(toAdd.back());
 		toAdd.pop_back();
@@ -155,6 +158,7 @@ void Diversification::repairCluster(ClusterSolution*& s, std::vector<Cluster*> t
 	
 
 	//return to the depot for every trip
+	//由于perturbation移除了depot,此处需再为每条trip增加depot
 	for (int v = 0; v < cluVRPinst_->getnVehicles(); v++)
 	{
 		s->getTrip(v)->addStop(s->getTrip(v)->getvClusters().front());
@@ -163,12 +167,14 @@ void Diversification::repairCluster(ClusterSolution*& s, std::vector<Cluster*> t
 	s->calcTotalDist();
 }
 
+//移除的clusters全部放入removedClusters(每条线路随机选取若干cluster移除)
 std::vector<Cluster*> Diversification::perturbationCluster(ClusterSolution*& s)
 {
 	std::vector<Cluster*> removedClusters;
-
+	//循环;每条线路分别寻找移除的类
 	for (int v = 0; v < cluVRPinst_->getnVehicles(); v++)
 	{
+		//无论哪条线路,先移除线路结尾的depot
 		if (s->getTrip(v)->getvClusters().front() == s->getTrip(v)->getvClusters().back())
 		{
 			s->getTrip(v)->removeStop(s->getTrip(v)->getSize() - 1);		//remove depot at the end of the trip
@@ -176,10 +182,12 @@ std::vector<Cluster*> Diversification::perturbationCluster(ClusterSolution*& s)
 
 		for (int i = 1; i < s->getTrip(v)->getSize(); i++)
 		{
+			//如果当前解s的线路v只有0-2个,则不执行perturbation.
 			if (s->getTrip(v)->getSize() < 3)
 			{
 				break;
 			}
+			//如果满足极小概率,移除当前cluster-i,并放入removedClusters
 			double r = (double)rand() / (RAND_MAX);
 			if (r < Params::PERT_RATE)
 			{
@@ -188,7 +196,6 @@ std::vector<Cluster*> Diversification::perturbationCluster(ClusterSolution*& s)
 			}
 		}
 	}
-
 	return removedClusters;
 }
 
@@ -206,10 +213,12 @@ bool Diversification::run(ClusterSolution*& s)
 {
 	std::vector<Cluster*> toAdd;
 
+	//破坏并修复cluSolution;
 	toAdd = perturbationCluster(s);
 	repairCluster(s, toAdd);
 
 	double r = (double)rand() / RAND_MAX;
+	//判断是否需要执行VNS1算法,false表示需要执行
 	if (r < Params::DIVERSIFICATION_1)
 		return false;		//go to cluVNS
 	else
@@ -217,7 +226,7 @@ bool Diversification::run(ClusterSolution*& s)
 }
 
 /******************************* REDISTRIBUTION **************************************/
-
+//3.3节中的cluster互换
 bool Redistribution::swapClusters(ClusterSolution*& cluSol)
 {
 	CluTrip* cluT1 = nullptr;
@@ -229,7 +238,7 @@ bool Redistribution::swapClusters(ClusterSolution*& cluSol)
 
 	for (int v1 = 0; v1 < cluVRPinst_->getnVehicles(); v1++)
 	{
-		cluT1 = cluSol->getTrip(v1);
+		cluT1 = cluSol->getTrip(v1); //cluT1代表车辆v1的trips
 
 		int spareCapacity = cluT1->getSpareCapacity();
 		if (spareCapacity == 0) continue;
@@ -240,20 +249,23 @@ bool Redistribution::swapClusters(ClusterSolution*& cluSol)
 
 			cluT2 = cluSol->getTrip(v2);
 
-			for (int i = 1; i < cluT1->getSize() - 1; i++)
+			for (int i = 1; i < cluT1->getSize() - 1; i++)	//i代表车辆v1对应的聚类序号
 			{
 				for (int j = 1; j < cluT2->getSize() - 1; j++)
 				{
 					if (cluT1->getCluster(i)->getDemand() == cluT2->getCluster(j)->getDemand()) continue;
 
+					//diff:计算swap后车辆容量是否满足
 					int diff = \
 						+ spareCapacity\
 						+ cluT1->getCluster(i)->getDemand()\
 						- cluT2->getCluster(j)->getDemand();
 
+					//如swap后满足容量且比minDif小,则可进行swap
 					if (diff >= 0 && diff < minDif)
 					{
-						Pos p1(v1, i);
+						//如果满足条件,记录下对应的聚类位置p1和p2
+						Pos p1(v1, i); //v1是veh序号;i是ind序号
 						Pos p2(v2, j);
 						if ((p1 == p1_ && p2 == p2_) || (p1 == p2_ && p2 == p1_)) continue;
 						
@@ -274,27 +286,31 @@ bool Redistribution::swapClusters(ClusterSolution*& cluSol)
 		}
 		if (flag) break;
 	}
+	//如果允许swap,执行下面code
 	if (success)
 	{
+		//1 计算每个veh应增加或减少的量c
 		int c = \
 			+ cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_)->getDemand()\
 			- cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_)->getDemand();
 
+		//2 每个veh(trip)增加或减少对应的量c
 		cluSol->getTrip(p1_.veh_)->altTotalDemand(-c);
 		cluSol->getTrip(p2_.veh_)->altTotalDemand(c);
 
+		//3 两个veh的dist均需重新计算
 		cluSol->getTrip(p1_.veh_)->altDist(\
 			- cluVRPinst_->getDistClusters(cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_ - 1), cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_))\
 			- cluVRPinst_->getDistClusters(cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_), cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_ + 1))\
 			+ cluVRPinst_->getDistClusters(cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_ - 1), cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_))\
 			+ cluVRPinst_->getDistClusters(cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_), cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_ + 1)));
-
 		cluSol->getTrip(p2_.veh_)->altDist(\
 			- cluVRPinst_->getDistClusters(cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_ - 1), cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_))\
 			- cluVRPinst_->getDistClusters(cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_), cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_ + 1))\
 			+ cluVRPinst_->getDistClusters(cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_ - 1), cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_))\
 			+ cluVRPinst_->getDistClusters(cluSol->getTrip(p1_.veh_)->getCluster(p1_.ind_), cluSol->getTrip(p2_.veh_)->getCluster(p2_.ind_ + 1)));
 
+		//4 在前述计算完成后,执行Move中的swap(位置交换)
 		Move::swap(cluSol, p1_, p2_);
 		return true;
 	}

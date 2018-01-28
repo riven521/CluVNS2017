@@ -1,3 +1,4 @@
+//重要:调整全局参数等
 #pragma once
 #include <vector>
 #include <iostream>
@@ -82,7 +83,7 @@ struct Node
 	}
 };
 
-//veh_:所属车辆;ind_;位置?
+//veh_:所属车辆;ind_;位置? index缩写? 对应该veh的每个cluster的位置?
 struct Pos				//position -> given to MOVE class
 {
 	int veh_;

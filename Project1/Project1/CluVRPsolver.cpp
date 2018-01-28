@@ -19,12 +19,12 @@ CluVRPsolver::~CluVRPsolver()
 
 CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 {
-	//如果车辆总容量<聚类总需求,即给定车辆不够,则instance是infeasible
+	//特殊情况:如果车辆总容量<聚类总需求,即给定车辆不够,则instance是infeasible
 	if (!cluVRPinst->isFeasible()) {
 		std::cout << "instance infeasible" << std::endl; return nullptr;
 	}
 
-	//赋值空指针给cluVRPsol
+	//初始化:赋值空指针给cluVRPsol
 	CluVRPsol* cluVRPsol = nullptr;
 
 	//create methods
@@ -38,7 +38,7 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 	sCluCurrent_ = new ClusterSolution(cluVRPinst);	//当前的ClusterSolution,应该暂时为空
 	
 	//try to construct feasible solution at cluster level
-	//试错过程,增加车辆数,直到BPheuristic_.run进行计算后返回Ture
+	//3.2;构建过程+试错过程,增加车辆数,直到BPheuristic_.run进行计算后返回Ture
 	while (!BPheuristic_->run(sCluCurrent_)) 
 	{
 		delete sCluCurrent_; sCluCurrent_ = nullptr;
@@ -58,17 +58,18 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 
 	do
 	{
-		//将sCluCurrent_进步一转换为VNS的sCluCurrent_,并重新计算目标距离值
+		//VNS1:将sCluCurrent_转换为VNS的sCluCurrent_,并重新计算目标距离值
 		cluVNS_->run(sCluCurrent_);
-		//由sCluCurrent_获取对应的NodeSolution;sNodCurrent_
+
+		//Convert;由sCluCurrent_获取对应的NodeSolution;sNodCurrent_
 		sNodCurrent_ = sCluCurrent_->convert();
 
 		do
 		{			
-			//将sNodCurrent_进步一转换为VNS的sNodCurrent_
+			//VNS2:将sNodCurrent_转换为VNS的sNodCurrent_
 			nodVNS_->run(sNodCurrent_);
 
-			//evaluate node solution 评估当前sNodCurrent_是否小于sNodBest_,如是则同时更新sCluBest_;nIterationsWithoutImprovement
+			//evaluate node solution 评估当前sNodCurrent_是否小于sNodBest_,如是则同时更新sCluBest_+nIterationsWithoutImprovement
 			if (sNodCurrent_->evaluate(sNodBest_))	//555 获取best:sNodBest_和sCluBest_
 			{
 				timer->setTimeBest(timer->getIntervalTime());
@@ -80,7 +81,7 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 
 				nodVNS_->disableAdditionalNBHs();
 			}
-			else
+			else  //无改进则增加nIterationsWithoutImprovement;再重新VNS1循环
 			{
 				delete sNodCurrent_; sNodCurrent_ = nullptr;
 
@@ -103,9 +104,11 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 				else
 					nodVNS_->disableAdditionalNBHs();
 			}
+			
 			//diversification before new round of improvement
+			//Diversification阶段:无论是否有改进,都执行如下操作.
 			goToNodeVNS = diversOperator_->run(sCluCurrent_);	//DIVERSIFICATION_1=1参数判断goToNodeVNS的类型,全部为false:go to cluVNS
-			if(goToNodeVNS) sNodCurrent_ = sCluCurrent_->convert();	//如果未true,则go to conversion;不通过步骤cluVNS_->run(sCluCurrent_);
+			if(goToNodeVNS) sNodCurrent_ = sCluCurrent_->convert();	//如果为true,则将Clu转换为Nodes,循环VNS2;为false:则循环VNS1;
 
 		} while (goToNodeVNS);
 

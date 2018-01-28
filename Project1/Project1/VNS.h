@@ -1,3 +1,4 @@
+//重要:VNS算法类
 #pragma once
 
 #include "Solution.h"

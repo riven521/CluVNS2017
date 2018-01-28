@@ -1,3 +1,4 @@
+//勿动(如不需修改聚类间距离计算方式):目的进行聚类间距离计算;
 #pragma once
 #include <vector>
 #include <algorithm>		//max_element

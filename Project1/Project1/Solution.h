@@ -1,3 +1,4 @@
+//重要:基础信息:类solution:扩展Clustersolution+NodeSolution
 #pragma once
 #include <vector>
 #include "Trip.h"

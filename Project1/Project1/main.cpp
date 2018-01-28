@@ -30,10 +30,11 @@ int main(void)
 		for (int i = 0; i < Params::N_RUNS; i++)  //循环对某一个算理运行次数
 		{
 			timer->startClock();
-			cluVRPsol = cluVRPsolver->solve(cluVRPinst, timer);  //求解该算理,参数1是算例;参数二为时间timer //Note cluVRPsol:其中sCluster;sNode包含solution和vtrips,最详细的解介绍
+			cluVRPsol = cluVRPsolver->solve(cluVRPinst, timer);  //求解该算例,参数1是算例;参数二为时间timer //Note cluVRPsol:其中sCluster;sNode包含solution和vtrips,最详细的解介绍
 			timer->stopClock();
 			
-			if (cluVRPsol == nullptr) continue;
+			if (cluVRPsol == nullptr) 
+				continue;
 	
 			//输出必要信息到文件 Note 必须建立solutions文件夹
 			Printer::addToSolutionOverview(cluVRPsol, timer, fileHandler);

@@ -1,3 +1,4 @@
+//重要:Trip(vehicle)类;具体线路
 #pragma once
 #include <vector>
 #include "CluVRPinst.h"

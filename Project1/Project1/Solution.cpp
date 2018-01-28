@@ -118,12 +118,14 @@ double ClusterSolution::calcTotalDist(void)
 	return totalDist_;
 }
 
+//聚类solution转换为节点solution,返回nodSol(由多条nodT构成)
 NodeSolution* ClusterSolution::convert(void)
 {
 	CluTrip* cluT = nullptr;
 	NodTrip* nodT = nullptr;
 	NodeSolution* nodSol = new NodeSolution(cluVRPinst_);
 
+	//循环;针对每个聚类对应的veh/trip,获取对应的nodT,再加入该trip到nodSlo中
 	for (int v = 0; v < cluVRPinst_->getnVehicles(); v++)
 	{
 		//copy current Clustered Trip
@@ -131,9 +133,10 @@ NodeSolution* ClusterSolution::convert(void)
 
 		//Create new Node Trip
 		nodT = new NodTrip(cluVRPinst_);
-		nodT->setTotalDemand(vTrips_.at(v)->getTotalDemand());
+		nodT->setTotalDemand(vTrips_.at(v)->getTotalDemand());	
 
 		//for every cluster in the Clustered Trip, take all nodes and push them in the Node Trip
+		//循环;针对veh/trip中的每个Cluster,逐步计算获取完整的nodT.
 		for (int i = 0; i < cluT->getSize(); i++)
 		{
 			Cluster* c = cluT->getCluster(i);
@@ -146,11 +149,14 @@ NodeSolution* ClusterSolution::convert(void)
 			}
 			else
 			{
+				//找出当前聚类c的所有节点nodes
 				std::vector<Node*> vNodes = c->getvNodesPtr();
 
+				//参数;判断如何选择聚类c内节点顺序
 				if ((double)rand() / RAND_MAX < Params::RANDOM_CONVERSION)
 				{
 					/* STRATEGY 1 => add nodes in random order for this cluster */
+					//方法1;随机
 					random_shuffle(vNodes.begin(), vNodes.end());
 
 					for (int j = 0; j < c->getnNodes(); j++)
@@ -161,7 +167,8 @@ NodeSolution* ClusterSolution::convert(void)
 				else
 				{
 					/* STRATEGY 2 => add nodes according to nearest neighbour approach */
-
+					//方法2:按距离选择
+					//2.1 找出距离当前nodT位置最佳的点作为first点,并addStop进入nodT
 					//define and add first node in the cluster (closest to current position)
 					double minDist = BIG_M;
 					int first;
@@ -178,6 +185,7 @@ NodeSolution* ClusterSolution::convert(void)
 					vNodes.erase(vNodes.begin() + first);
 
 					//get next cluster to define the appropriate last node in the current cluster (closest to a node in the next cluster)
+					//2.2 找出距离下一cluster最近的当前cluster中的最佳点作为当前聚类的last点,但并不addStop进入nodT(类似预处理聚类间距离)
 					std::vector<Node*> vNodesNext = cluT->getCluster(i + 1)->getvNodesPtr();
 					minDist = BIG_M;
 					int last;
@@ -197,6 +205,7 @@ NodeSolution* ClusterSolution::convert(void)
 					vNodes.erase(vNodes.begin() + last);
 
 					//add optimal sequence to the trip
+					//2.3 排除first和last后,找出余下点的next点(从first出发最近的),并addStop进入nodT;
 					while (vNodes.size() > 0)
 					{
 						minDist = BIG_M;
@@ -214,11 +223,13 @@ NodeSolution* ClusterSolution::convert(void)
 						vNodes.erase(vNodes.begin() + next);
 					}
 
+					//2.4 最后addStop最后的last点,完成该nodT
 					nodT->addStop(lastNode);
 				}
 			}
 		}
 
+		//计算;nodT对应的trip距离(不同与距离的distance)
 		nodT->calcDistance();
 		nodSol->addTrip(nodT);
 	}

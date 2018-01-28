@@ -1,3 +1,4 @@
+//勿动:寻找文件信息等
 #pragma once
 #include <string>
 #include <fstream>		//ofstream

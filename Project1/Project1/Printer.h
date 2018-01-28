@@ -1,3 +1,4 @@
+//普通:信息输出
 #pragma once
 #include <iostream>
 #include "FileHandler.h"

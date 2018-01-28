@@ -1,3 +1,4 @@
+//勿动:时间记录类
 #pragma once
 #include <time.h>
 

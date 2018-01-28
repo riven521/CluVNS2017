@@ -1,3 +1,4 @@
+//重要:含BF装箱算法+Redistribution算法+Diversification算法
 #pragma once
 #include "CluVRPinst.h"
 #include "Solution.h"

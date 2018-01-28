@@ -2,9 +2,10 @@
 
 using namespace std;
 
+//函数:输入节点nodes信息;输出node间距离矩阵m;
 std::vector<std::vector<double>> Reader::calcNodeDistances(std::vector<Node>& vNodes)
 {
-	std::vector<std::vector<double>> m;
+	std::vector<std::vector<double>> m;	//m为double矩阵,包含Node间距离
 	unsigned int nNodes = vNodes.size();
 
 	//resize the vector
@@ -34,7 +35,7 @@ std::vector<std::vector<double>> Reader::calcNodeDistances(std::vector<Node>& vN
 
 	return m;
 }
-
+//函数:输入聚类clusters信息+已获取的node间距离;输出cluster间距离矩阵m;
 std::vector<std::vector<double>> Reader::calcClusterDistances(std::vector<Cluster>& vClusters, std::vector<std::vector<double>>& distNodes)
 {
 	std::vector<std::vector<double>> m;
@@ -52,6 +53,7 @@ std::vector<std::vector<double>> Reader::calcClusterDistances(std::vector<Cluste
 			if (i == j) m.at(i).at(j) = BIG_M;
 			else
 			{
+				//555 计算聚类间距离:取值任一cluster与另一cluster的相互最短距离
 				m.at(i).at(j) = m.at(j).at(i) = Hausdorff::calcDistance(vClusters.at(i).getvNodes(), vClusters.at(j).getvNodes(), distNodes);
 			}
 		}
@@ -202,7 +204,7 @@ CluVRPinst* Reader::read(std::string filePathInstance)
 
 	cluVRPinst = new CluVRPinst(vClusters, nVehicles);	//输入聚类和可用车辆数作为算例
 	cluVRPinst->setDistNodes(calcNodeDistances(vNodes));	//依据算例计算NOdes间距离
-	cluVRPinst->setDistClusters(calcClusterDistances(vClusters, cluVRPinst->getDistNodesMatrix()));	//计算聚类间距离
+	cluVRPinst->setDistClusters(calcClusterDistances(vClusters, cluVRPinst->getDistNodesMatrix()));	//555 计算聚类间距离（预处理）
 	//cluVRPinst->setSpan(span_);
 	//cluVRPinst->calculateIntraClusterTSP();
 
