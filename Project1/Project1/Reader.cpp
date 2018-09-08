@@ -53,7 +53,7 @@ std::vector<std::vector<double>> Reader::calcClusterDistances(std::vector<Cluste
 			if (i == j) m.at(i).at(j) = BIG_M;
 			else
 			{
-				//555 计算聚类间距离:取值任一cluster与另一cluster的相互最短距离
+				//555 计算聚类间距离:取值任一cluster与另一cluster的相互最短距离 Hausdorff距离
 				m.at(i).at(j) = m.at(j).at(i) = Hausdorff::calcDistance(vClusters.at(i).getvNodes(), vClusters.at(j).getvNodes(), distNodes);
 			}
 		}
@@ -82,13 +82,13 @@ CluVRPinst* Reader::read(std::string filePathInstance)
 	int nClusters;
 
 	fscanf_s(f_ptr, "%*s %*s %*s %*s %*s %*s %*s");
-	if (setSelection_ == 0 || setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7) fscanf_s(f_ptr, "%*s");			//only for the CluVRP2 set
+	if (setSelection_ == 0 || setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7 || setSelection_ == 8) fscanf_s(f_ptr, "%*s");			//only for the CluVRP2 set
 
 	//if (setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7) fscanf_s(f_ptr, "%d %*s %*s %d %*s %*s %d %*s", &dimension, &nClusters, &Globals::vehicleCapacity);
 	if (setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7) fscanf_s(f_ptr, "%*s %d %*s %*s %d %*s", &dimension, &Globals::vehicleCapacity);
 	else fscanf_s(f_ptr, "%d %*s %*s %d %*s %*s %d %*s %*s %d %*s", &dimension, &nVehicles, &nClusters, &Globals::vehicleCapacity);
 
-	if (setSelection_ == 0 || setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7) fscanf_s(f_ptr, "%*s %*s %*s");	//not for the largegolden set
+	if (setSelection_ == 0 || setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7 || setSelection_ == 8) fscanf_s(f_ptr, "%*s %*s %*s");	//not for the largegolden set
 	if (setSelection_ == 3 || setSelection_ == 4 || setSelection_ == 5 || setSelection_ == 6 || setSelection_ == 7) fscanf_s(f_ptr, "%*s %*s");
 
 	//read individual nodes

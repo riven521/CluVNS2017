@@ -38,11 +38,11 @@ struct Params
 			RANDOM_CONVERSION = RANDOM_CONVERSION_DEFAULT;
 			PERT_RATE = PERT_RATE_DEFAULT;
 			DIVERSIFICATION_1 = DIVERSIFICATION_1_DEFAULT;
-			TUNING = false;
+			TUNING = true; //ԭʼ TUNING = false;
 		}
 		else
 		{
-			TUNING = false;
+			TUNING = true; //ԭʼ TUNING = false;
 
 			int temp;
 			if (sscanf_s(__argv[2], "%d", &temp) != 1) HARD_CLUSTER = HARD_CLUSTER_DEFAULT;

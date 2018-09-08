@@ -17,6 +17,59 @@ CluVRPsolver::~CluVRPsolver()
 	delete params_;
 }
 
+void CluVRPsolver::showSol(ClusterSolution* sCluCurrent)
+{
+	//555 自增: 解的展示sCluCurret 属于ClusterSolution
+	cout << endl;
+	cout << "本次算例的聚类解为：" << endl;
+	cout << "聚类解总线路数= " << sCluCurrent_->getnTrips() << "    ";
+	cout << "聚类解总距离= " << sCluCurrent_->getTotalDist() << "    " << endl;
+	for (int i = 0; i < sCluCurrent_->getnTrips(); i++)
+	{
+		CluTrip* thisCluTrip = sCluCurrent_->getTrip(i);
+		cout << "路线" << i + 1 << "总需求=" << thisCluTrip->getTotalDemand() << "  ";
+		cout << "剩余容量= " << thisCluTrip->getSpareCapacity() << "  ";
+		cout << "总距离= " << thisCluTrip->getDistance() << "  ";
+		cout << "最后位置= " << thisCluTrip->getLastPosition()->getId() << "  " << endl;
+		//cout << "路线" << i << "总size  =" << thisCluTrip->getSize() << endl;
+
+		// 从每个trip的vClusters中循环访问聚类的Id,也可增加其它内容
+		cout << "访问聚类顺序  ";
+		for (int j = 0; j < thisCluTrip->getSize(); j++)
+		{
+			cout << thisCluTrip->getCluster(j)->getId() << "  ";
+		}
+		cout << endl;
+	}
+}
+
+void CluVRPsolver::showSol(NodeSolution* sNodCurrent_)
+{
+	//555 自增: 解的展示sNodCurrent_ 属于NodeSolution
+	cout << endl;
+	cout << "本次算例的聚类转换为节点解为：" << endl;
+	cout << "节点解总线路数= " << sNodCurrent_->getnTrips() << "    ";
+	cout << "节点解总距离= " << sNodCurrent_->getTotalDist() << "    " << endl;
+	for (int i = 0; i < sNodCurrent_->getnTrips(); i++)
+	{
+		NodTrip* thisNodTrip = sNodCurrent_->getTrip(i);
+		cout << "路线" << i + 1 << "总需求=" << thisNodTrip->getTotalDemand() << "  ";
+		cout << "剩余容量= " << thisNodTrip->getSpareCapacity() << "  ";
+		cout << "总距离= " << thisNodTrip->getDistance() << "  ";
+		cout << "最后位置= " << thisNodTrip->getLastPosition()->id << "  " << endl;
+		//cout << "路线" << i << "总size  =" << thisNodTrip->getSize() << endl;
+
+		// 从每个trip的vNodes中循环访问节点的id,也可增加其它内容
+		cout << "访问节点顺序  ";
+		for (int j = 0; j < thisNodTrip->getSize(); j++)
+		{
+			cout << thisNodTrip->getNode(j)->id << "  ";
+		}
+		cout << endl;
+	}
+}
+
+
 CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 {
 	//特殊情况:如果车辆总容量<聚类总需求,即给定车辆不够,则instance是infeasible
@@ -37,6 +90,8 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 	
 	sCluCurrent_ = new ClusterSolution(cluVRPinst);	//当前的ClusterSolution,应该暂时为空
 	
+
+
 	//try to construct feasible solution at cluster level
 	//3.2;构建过程+试错过程,增加车辆数,直到BPheuristic_.run进行计算后返回Ture
 	while (!BPheuristic_->run(sCluCurrent_)) 
@@ -46,8 +101,13 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 		sCluCurrent_ = new ClusterSolution(cluVRPinst);
 	}
 
+	showSol(sCluCurrent_); //自增: solution结果展示
+
+	// ************** 以上 完成聚类初始解的构建 **************** //
+
+
 	//create methods
-	cluVNS_ = new CluVNS(cluVRPinst);	//初始化cluVNS->nbhSequence为数组,0-6
+	cluVNS_ = new CluVNS(cluVRPinst);		//初始化cluVNS->nbhSequence为数组,0-6
 	nodVNS_ = new NodVNS(cluVRPinst, false);
 	diversOperator_ = new Diversification(cluVRPinst);
 
@@ -67,7 +127,8 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 		do
 		{			
 			//VNS2:将sNodCurrent_转换为VNS的sNodCurrent_
-			nodVNS_->run(sNodCurrent_);
+			nodVNS_->run(sNodCurrent_);	//后期: 将nod内由VNS转换为LHK算法获取最佳访问顺序
+			
 
 			//evaluate node solution 评估当前sNodCurrent_是否小于sNodBest_,如是则同时更新sCluBest_+nIterationsWithoutImprovement
 			if (sNodCurrent_->evaluate(sNodBest_))	//555 获取best:sNodBest_和sCluBest_
@@ -76,6 +137,9 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 				//keep also the cluster variant of the best node solution
 				if (sCluBest_ != nullptr) delete sCluBest_;
 				sCluBest_ = sNodBest_->convert();
+
+				showSol(sCluBest_); //自增: solution结果展示
+				showSol(sNodBest_); //自增: solution结果展示
 				//reset counter
 				nIterationsWithoutImprovement = 0;
 

@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "Globals.h"
+using namespace std; //自增
 
 class Cluster
 {
@@ -21,6 +22,10 @@ public:
 
 	Cluster(int);
 	~Cluster();
+
+	// 自增：方便输出结果 : 参考Overloading the << Operator for Your Own Classes from https://msdn.microsoft.com/en-us/library/1z2f6c2k.aspx
+	//friend ostream& operator<<(ostream& os, const Cluster* cluster);
+
 
 	//getters
 	inline int getDemand(void) const

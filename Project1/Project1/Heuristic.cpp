@@ -23,7 +23,7 @@ BinPacking::~BinPacking()
 	delete diversOperator_;
 }
 
-//应该是装箱算法，如BF等；但仅返回bool型,ClusterSolution会在函数中更新
+//应该是装箱算法，如BF等；但仅返回bool型,ClusterSolution(即s)会在函数中更新
 bool BinPacking::run(ClusterSolution*& s)
 {
 	//获取inst算例中的Clusters数据,不包括depot的cluster

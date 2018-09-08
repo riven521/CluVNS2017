@@ -29,5 +29,7 @@ public:
 	CluVRPsolver();
 	~CluVRPsolver();
 
+	void showSol(ClusterSolution*);
+	void showSol(NodeSolution*);
 	CluVRPsol* solve(CluVRPinst*, Timer*);
 };

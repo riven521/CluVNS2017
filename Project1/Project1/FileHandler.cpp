@@ -13,6 +13,7 @@ void FileHandler::createFilePathNextInstance(void)
 	temp2 << temp;
 	currentInstanceName_ = temp2.str();
 
+	// 如果overview文件遇到STOP符号
 	if (currentInstanceName_ == "STOP")
 	{
 		system("pause");	//增加“按任意键继续”
@@ -53,7 +54,10 @@ void FileHandler::createFilePathNextInstance(void)
 	{
 		buff << "\\instances\\GoldenWasilKellyAndChao-1.0\\" << currentInstanceName_;
 	}
-
+	else if (setSelection_ == 8)
+	{
+		buff << "\\instances\\SimpleInstance\\" << currentInstanceName_;
+	}
 	char cwd[300];
 	filePathInstance_ = _getcwd(cwd, 300) + buff.str(); //_getcwd:获取当前working目录路径 from direct.h
 }
@@ -93,7 +97,10 @@ void FileHandler::createFilePathSolutionOverview(void)
 	{
 		buff << "\\solutions\\sol-golden-1.0-Full" << CALC_TIME << ".txt";
 	}
-
+	else if (setSelection_ == 8)
+	{
+		buff << "\\solutions\\sol-SimpleInstance-Full" << CALC_TIME << ".txt";
+	}
 
 	char cwd[300];
 	filePathSolutionOverview_ = _getcwd(cwd, 300) + buff.str();
@@ -137,10 +144,11 @@ void FileHandler::initOverview(void)
 				"4 = GoldenWasilKellyAndChao-0.25" << endl << \
 				"5 = GoldenWasilKellyAndChao-0.5" << endl << \
 				"6 = GoldenWasilKellyAndChao-0.75" << endl << \
-				"7 = GoldenWasilKellyAndChao-1.0" << endl << endl << \
+				"7 = GoldenWasilKellyAndChao-1.0" << endl << \
+				"8 = SimpleInst" << endl << endl << \
 				"Press 9 to quit" << endl << endl;
 
-			//setSelection_ = 0;	//不用输入,自动选择0
+			//setSelection_ = 8;	//不用输入,自动选择8
 			scanf_s("%d", &setSelection_);
 		}
 		else
@@ -181,6 +189,10 @@ void FileHandler::initOverview(void)
 		{
 			instSet = "GoldenWasilKellyAndChao-1.0";
 		}
+		else if (setSelection_ == 8)
+		{
+			instSet = "SimpleInstance";
+		}
 		else if (setSelection_ == 9)
 		{
 			exit(0);
@@ -202,8 +214,8 @@ void FileHandler::initOverview(void)
 
 void FileHandler::initOutputFiles(void)
 {
-	createFilePathSolutionOverview();
-	//createTrack();
+	createFilePathSolutionOverview(); //输出结果到solutions文件夹
+	// createTrack(); //输出track结果 但作者似乎还未完善
 }
 
 FileHandler::FileHandler()

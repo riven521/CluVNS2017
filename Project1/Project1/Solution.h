@@ -37,6 +37,7 @@ public:
 	ClusterSolution(CluVRPinst*);
 	~ClusterSolution();
 
+
 	//getters
 	inline CluTrip* getTrip(int i) const
 	{
