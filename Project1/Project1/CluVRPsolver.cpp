@@ -110,25 +110,28 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 	cluVNS_ = new CluVNS(cluVRPinst);		//初始化cluVNS->nbhSequence为数组,0-6
 	nodVNS_ = new NodVNS(cluVRPinst, false);
 	diversOperator_ = new Diversification(cluVRPinst);
-
+	
 	//start local search
 	bool goToNodeVNS = false;
 	bool stoppingCriterion = false;
 	int nIterationsWithoutImprovement = 0;
 
+	// ************** 以上 初始化 **************** //
+
 	do
 	{
 		//VNS1:将sCluCurrent_转换为VNS的sCluCurrent_,并重新计算目标距离值
-		cluVNS_->run(sCluCurrent_);
+				showSol(sCluCurrent_); //自增: solution结果展示
+		cluVNS_->run(sCluCurrent_);//仅仅是获得一个新解
+				showSol(sCluCurrent_); //自增: solution结果展示
 
 		//Convert;由sCluCurrent_获取对应的NodeSolution;sNodCurrent_
-		sNodCurrent_ = sCluCurrent_->convert();
+		sNodCurrent_ = sCluCurrent_->convert(); //后期: 将nod内由VNS转换为LHK算法获取最佳访问顺序
 
 		do
 		{			
 			//VNS2:将sNodCurrent_转换为VNS的sNodCurrent_
-			nodVNS_->run(sNodCurrent_);	//后期: 将nod内由VNS转换为LHK算法获取最佳访问顺序
-			
+			nodVNS_->run(sNodCurrent_);	//如采用LK算法，将不需要该函数
 
 			//evaluate node solution 评估当前sNodCurrent_是否小于sNodBest_,如是则同时更新sCluBest_+nIterationsWithoutImprovement
 			if (sNodCurrent_->evaluate(sNodBest_))	//555 获取best:sNodBest_和sCluBest_
@@ -136,7 +139,7 @@ CluVRPsol* CluVRPsolver::solve(CluVRPinst* cluVRPinst, Timer* timer)
 				timer->setTimeBest(timer->getIntervalTime());
 				//keep also the cluster variant of the best node solution
 				if (sCluBest_ != nullptr) delete sCluBest_;
-				sCluBest_ = sNodBest_->convert();
+				sCluBest_ = sNodBest_->convert();	// TODO 如采用nodVNS,则还不要不断的转换,如转换后结果不好,还要进行各种改进,还 不如永LHK算法的好 TODO
 
 				showSol(sCluBest_); //自增: solution结果展示
 				showSol(sNodBest_); //自增: solution结果展示

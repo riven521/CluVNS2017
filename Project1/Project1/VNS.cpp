@@ -260,11 +260,12 @@ bool CluVNS::interVehicleSwap(void)
 							- cluVRPinst_->getDistClusters(current_->getTrip(v2)->getCluster(j), current_->getTrip(v2)->getCluster(j + 1))\
 							+ cluVRPinst_->getDistClusters(current_->getTrip(v2)->getCluster(j - 1), current_->getTrip(v1)->getCluster(i))\
 							+ cluVRPinst_->getDistClusters(current_->getTrip(v1)->getCluster(i), current_->getTrip(v2)->getCluster(j + 1));
-
+						// 如果满足如下条件 : 进行vehicle之间的swap操作
 						if (d1 + d2 < -.01)
 						{
 							Pos a(v1, i), b(v2, j);
 							Move::swap(current_, a, b);
+							// 上面进行操作；下面进行量的变化
 							current_->getTrip(v1)->altDist(d1);
 							current_->getTrip(v2)->altDist(d2);
 							current_->getTrip(v1)->setTotalDemand(c1);
@@ -461,7 +462,7 @@ CluVNS::~CluVNS(){}
 void CluVNS::run(ClusterSolution*& s)
 {
 	//shuffle the order in which the neighbourhoods are checked
-	//7个算子打乱顺序
+	//7个算子打乱顺序 nbhSequence_:整数向量
 	std::random_shuffle(nbhSequence_.begin(), nbhSequence_.end());
 
 	current_ = s;
@@ -469,7 +470,7 @@ void CluVNS::run(ClusterSolution*& s)
 
 	while (currentNBH_ < nNBHs_)
 	{
-		if (findNeighbour())	//寻找邻域
+		if (findNeighbour())	//寻找邻域,若找到即重新设置k=1
 		{
 			currentNBH_ = 0;
 			continue;

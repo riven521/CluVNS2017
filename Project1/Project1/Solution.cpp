@@ -126,6 +126,7 @@ NodeSolution* ClusterSolution::convert(void)
 	NodeSolution* nodSol = new NodeSolution(cluVRPinst_);
 
 	//循环;针对每个聚类对应的veh/trip,获取对应的nodT,再加入该trip到nodSlo中
+	//循环1:trip无顺序;   每个trip计算nodT距离,并将该trip增加到解solution		nodT->calcDistance();	nodSol->addTrip(nodT);
 	for (int v = 0; v < cluVRPinst_->getnVehicles(); v++)
 	{
 		//copy current Clustered Trip
@@ -136,7 +137,7 @@ NodeSolution* ClusterSolution::convert(void)
 		nodT->setTotalDemand(vTrips_.at(v)->getTotalDemand());	
 
 		//for every cluster in the Clustered Trip, take all nodes and push them in the Node Trip
-		//循环;针对veh/trip中的每个Cluster,逐步计算获取完整的nodT.
+		//循环2;Cluster无顺序;   针对veh/trip中的每个Cluster,逐步计算获取完整的nodT.
 		for (int i = 0; i < cluT->getSize(); i++)
 		{
 			Cluster* c = cluT->getCluster(i);
@@ -164,7 +165,7 @@ NodeSolution* ClusterSolution::convert(void)
 						nodT->addStop(vNodes.at(j));
 					}
 				}
-				else
+				else // TODO - 找出该聚类c的起始和终点,并按nearest方法解决该TSP问题
 				{
 					/* STRATEGY 2 => add nodes according to nearest neighbour approach */
 					//方法2:按距离选择
@@ -201,7 +202,7 @@ NodeSolution* ClusterSolution::convert(void)
 						}
 					}
 
-					Node* lastNode = vNodes.at(last);
+					Node* lastNode = vNodes.at(last);		//最后节点暂放到lastNode
 					vNodes.erase(vNodes.begin() + last);
 
 					//add optimal sequence to the trip
@@ -210,6 +211,7 @@ NodeSolution* ClusterSolution::convert(void)
 					{
 						minDist = BIG_M;
 						int next;
+						//循环找出距离当前node最近的节点next
 						for (unsigned int j = 0; j < vNodes.size(); j++)
 						{
 							if (cluVRPinst_->getDistNodes(nodT->getLastPosition(), vNodes.at(j)) < minDist)

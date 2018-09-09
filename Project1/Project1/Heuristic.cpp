@@ -30,6 +30,7 @@ bool BinPacking::run(ClusterSolution*& s)
 	std::vector<Cluster*> vClientClusters = cluVRPinst_->getClientClusters();
 
 	//sort clusters from by demand (large to small)
+	// TODO 修改递减排序为随机顺序
 	sort(vClientClusters.begin(), vClientClusters.end(), Cluster::sortByDemandOperator);
 
 	//create trip for every vehicle,每个vehicle对应一个trip,该段仅包含初始depot的trip与包含该trip的CluSolution
@@ -37,7 +38,7 @@ bool BinPacking::run(ClusterSolution*& s)
 	{
 		CluTrip* t = new CluTrip(cluVRPinst_);	//每个Trip包含算例;dist;totalDemand;size
 		
-		//select random depot	
+		//select random depot
 		//每个算例inst均有vClusters_,可能含有多个depot聚类,随机选择一个作为初始Trip的起点
 		t->addStop(cluVRPinst_->getRandomDepot());	//t是一个CluTrip;addStop:增加Cluster到该CluTrip
 		//add trip to the solution
@@ -48,6 +49,7 @@ bool BinPacking::run(ClusterSolution*& s)
 	int nRedistributionIterations = 0;
 
 	//循环选择cluster放入不同trip,放到解s中,直到放完
+	//固定聚类c,选择vehicle
 	while (vClientClusters.size() > 0)
 	{
 		//get cluster to add
@@ -60,6 +62,7 @@ bool BinPacking::run(ClusterSolution*& s)
 		int veh;
 
 		//依据概率,随机选择veh(要求剩余容量足够)或选择距当前类c最近的veh(要求剩余容量足够,且距离最近的veh/vtrips)
+		// (若距离相同呢?) -> 若相同,选择第一个; 若车型不同, 则选择异性车辆- 可能不同车型大小不一
 		if (r < Params::RANDOM_CONSTRUCTION) veh = s->getRandomFeasibleVehicle(c,success);	
 		else veh = s->getClosestFeasibleVehicle(c,success);	//RANDOM_CONSTRUCTION默认为0,因此全部选择最近的
 

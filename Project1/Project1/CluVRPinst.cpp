@@ -26,7 +26,7 @@ std::vector<Cluster*> CluVRPinst::getClientClusters(void)
 	}
 	return v;
 }
-
+// 如有多个depot,随机选择一个
 Cluster* CluVRPinst::getRandomDepot(void)
 {
 	std::vector<Cluster*> v;
@@ -36,7 +36,7 @@ Cluster* CluVRPinst::getRandomDepot(void)
 		if (vClusters_.at(i).isDepot) v.push_back(&vClusters_.at(i));
 	}
 
-	return v.at(rand() % v.size());
+	return v.at(rand() % v.size());//随机选择一个
 }
 
 // 简单判定车辆数量是否足以满足总需求
